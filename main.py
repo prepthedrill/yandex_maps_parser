@@ -2,13 +2,19 @@ import json
 import time
 
 from selenium import webdriver
+from selenium.webdriver import ActionChains
+from selenium.webdriver.common.actions.wheel_input import ScrollOrigin
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 NAME_INPUT_FILE = 'input.txt'
-TIME_SLEEP = 0.75
+OUTPUT_TXT_FILE = True
+OUTPUT_JSON_FILE = True
+# Задержка
+TIME_SLEEP = 1
+# Что извлекать у организации
 NAME = True
 CATEGORY = True
 
@@ -37,14 +43,26 @@ for request in REQUESTS:
 
     browser.get(button.get_attribute('href') + 'inside/')
 
+    scroll_origin = ScrollOrigin.from_viewport(100, 200)
+    scroll_container = browser.find_element(By.CLASS_NAME, "scroll__container")
+
+    scroll_height = browser.execute_script("return arguments[0].scrollHeight", scroll_container)
+    while True:
+        ActionChains(browser).scroll_from_origin(scroll_origin, 0, 5000).perform()
+        time.sleep(0.7)
+        if scroll_height == browser.execute_script("return arguments[0].scrollHeight", scroll_container):
+            break
+        else:
+            scroll_height = browser.execute_script("return arguments[0].scrollHeight", scroll_container)
+
     if CATEGORY:
-        companies_category = WebDriverWait(browser, 5).until(EC.presence_of_all_elements_located((By.XPATH, "//a[@class='search-business-snippet-view__category']")))
+        companies_category = WebDriverWait(browser, 10).until(EC.presence_of_all_elements_located((By.XPATH, "//a[@class='search-business-snippet-view__category']")))
         list_category = []
         for category in companies_category:
             list_category.append(category.text)
         coordinate_category[request] = list_category
     if NAME:
-        companies_name = WebDriverWait(browser, 5).until(EC.presence_of_all_elements_located((By.XPATH, "//div[@class='search-business-snippet-view__title']")))
+        companies_name = WebDriverWait(browser, 10).until(EC.presence_of_all_elements_located((By.XPATH, "//div[@class='search-business-snippet-view__title']")))
         list_name = []
         for name in companies_name:
             list_name.append(name.text)
@@ -52,8 +70,13 @@ for request in REQUESTS:
 
 browser.quit()
 
-with open("result.txt", "w") as file:
-    file.write('CATEGORY\n')
-    file.write(str(coordinate_category))
-    file.write('\nNAME\n')
-    file.write(str(coordinate_name))
+if OUTPUT_TXT_FILE:
+    with open("result_txt.txt", "w") as f_txt:
+        f_txt.write('CATEGORY\n')
+        f_txt.write(str(coordinate_category))
+        f_txt.write('\nNAME\n')
+        f_txt.write(str(coordinate_name))
+if OUTPUT_JSON_FILE:
+    with open("result_json.json", "w") as f_json:
+        json.dump(coordinate_category, f_json, indent=2, ensure_ascii=False)
+        json.dump(coordinate_name, f_json, indent=2, ensure_ascii=False)
