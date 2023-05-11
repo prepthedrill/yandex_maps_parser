@@ -8,42 +8,52 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 NAME_INPUT_FILE = 'input.txt'
+TIME_SLEEP = 0.75
+NAME = True
+CATEGORY = True
 
 with open(NAME_INPUT_FILE, 'r') as f:
     lines = f.readlines()
-    COORDINATES = [line.strip() for line in lines]
+    REQUESTS = [line.strip() for line in lines]
 
 browser = webdriver.Chrome()
+coordinate_category = {}
+coordinate_name = {}
 
-result = {}
-for coordinate in COORDINATES:
-    browser.get('https://yandex.ru/maps/')
+browser.get('https://yandex.ru/maps/')
+time.sleep(TIME_SLEEP)
 
-    time.sleep(1)
-
+for request in REQUESTS:
     search_box_root = browser.find_element(By.XPATH, "//div[@class='search-form-view__input']")
     search_box = search_box_root.find_element(By.XPATH, "//input[@class='input__control _bold']")
-    search_box.send_keys(coordinate)  # Вводим текст запроса в окно поиска
+    search_box.send_keys(request)  # Вводим текст запроса в окно поиска
     search_box.send_keys(Keys.RETURN)
 
-    time.sleep(1)
+    time.sleep(TIME_SLEEP)
     button_root = browser.find_element(By.XPATH, "//div[@class='carousel__content']")
-    time.sleep(1)
+    time.sleep(TIME_SLEEP)
 
     button = button_root.find_element(By.XPATH, "//a[@class='tabs-select-view__label']")
 
-    href = button.get_attribute('href') + 'inside/'
+    browser.get(button.get_attribute('href') + 'inside/')
 
-    browser.get(href)
-    companies_category = WebDriverWait(browser, 5).until(EC.presence_of_all_elements_located((By.XPATH, "//a[@class='search-business-snippet-view__category']")))
-
-    list_category = []
-    for category in companies_category:
-        list_category.append(category.text)
-
-    result[coordinate] = list_category
+    if CATEGORY:
+        companies_category = WebDriverWait(browser, 5).until(EC.presence_of_all_elements_located((By.XPATH, "//a[@class='search-business-snippet-view__category']")))
+        list_category = []
+        for category in companies_category:
+            list_category.append(category.text)
+        coordinate_category[request] = list_category
+    if NAME:
+        companies_name = WebDriverWait(browser, 5).until(EC.presence_of_all_elements_located((By.XPATH, "//div[@class='search-business-snippet-view__title']")))
+        list_name = []
+        for name in companies_name:
+            list_name.append(name.text)
+        coordinate_name[request] = list_name
 
 browser.quit()
 
-with open("result.json", "w") as f:
-    json.dump(result, f, ensure_ascii=False)
+with open("result.txt", "w") as file:
+    file.write('CATEGORY\n')
+    file.write(str(coordinate_category))
+    file.write('\nNAME\n')
+    file.write(str(coordinate_name))
