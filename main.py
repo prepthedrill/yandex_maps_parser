@@ -12,7 +12,9 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 def extract_category(driver):
     companies_category = WebDriverWait(driver, 10).until(
-        EC.presence_of_all_elements_located((By.XPATH, "//a[@class='search-business-snippet-view__category']"))
+        EC.presence_of_all_elements_located(
+            (By.XPATH, "//a[@class='search-business-snippet-view__category']")
+        )
     )
     list_category = []
     for category in companies_category:
@@ -25,7 +27,9 @@ def extract_category(driver):
 
 def extract_name(driver):
     companies_name = WebDriverWait(driver, 10).until(
-        EC.presence_of_all_elements_located((By.XPATH, "//div[@class='search-business-snippet-view__title']"))
+        EC.presence_of_all_elements_located(
+            (By.XPATH, "//div[@class='search-business-snippet-view__title']")
+        )
     )
     list_name = [name.text for name in companies_name]
     return list_name
@@ -33,7 +37,9 @@ def extract_name(driver):
 
 def extract_address(driver):
     companies_address = WebDriverWait(driver, 10).until(
-        EC.presence_of_all_elements_located((By.XPATH, "//div[@class='toponym-card-title-view__description']"))
+        EC.presence_of_all_elements_located(
+            (By.XPATH, "//div[@class='toponym-card-title-view__description']")
+        )
     )
     addresses = [element.text for element in companies_address]
     return addresses
@@ -41,67 +47,85 @@ def extract_address(driver):
 
 def extract_coordinates(driver):
     companies_coordinates = WebDriverWait(driver, 10).until(
-        EC.presence_of_all_elements_located((By.XPATH, "//div[@class='toponym-card-title-view__coords-badge']"))
+        EC.presence_of_all_elements_located(
+            (By.XPATH, "//div[@class='toponym-card-title-view__coords-badge']")
+        )
     )
     coordinates = [element.text for element in companies_coordinates]
     return coordinates
 
 
-def perform_search(driver, request):
+def perform_search(driver, request, TIME_SLEEP=1):
     search_box_root = WebDriverWait(driver, 10).until(
-        EC.presence_of_element_located((By.XPATH, "//div[@class='search-form-view__input']"))
+        EC.presence_of_element_located(
+            (By.XPATH, "//div[@class='search-form-view__input']")
+        )
     )
-    search_box = search_box_root.find_element(By.XPATH, "//input[@class='input__control _bold']")
+    search_box = search_box_root.find_element(
+        By.XPATH, "//input[@class='input__control _bold']"
+    )
     search_box.send_keys(request)
     search_box.send_keys(Keys.RETURN)
     time.sleep(TIME_SLEEP)
     button_root = WebDriverWait(driver, 10).until(
-        EC.presence_of_element_located((By.XPATH, "//div[@class='carousel__content']"))
+        EC.presence_of_element_located(
+            (By.XPATH, "//div[@class='carousel__content']")
+        )
     )
-    button = button_root.find_element(By.XPATH, "//a[@class='tabs-select-view__label']")
+    button = button_root.find_element(
+        By.XPATH, "//a[@class='tabs-select-view__label']"
+    )
     driver.get(button.get_attribute('href') + 'inside/')
 
     scroll_origin = ScrollOrigin.from_viewport(100, 200)
     scroll_container = driver.find_element(By.CLASS_NAME, "scroll__container")
-    scroll_height = driver.execute_script("return arguments[0].scrollHeight", scroll_container)
+    scroll_height = driver.execute_script(
+        "return arguments[0].scrollHeight", scroll_container
+    )
     while True:
         ActionChains(driver).scroll_from_origin(scroll_origin, 0, 5000).perform()
         time.sleep(0.9)
-        if scroll_height == driver.execute_script("return arguments[0].scrollHeight", scroll_container):
+        if scroll_height == driver.execute_script(
+                "return arguments[0].scrollHeight", scroll_container
+        ):
             break
         else:
-            scroll_height = driver.execute_script("return arguments[0].scrollHeight", scroll_container)
+            scroll_height = driver.execute_script(
+                "return arguments[0].scrollHeight", scroll_container
+            )
 
 
-NAME_INPUT_FILE = 'input.txt'
-TIME_SLEEP = 1
-REQUESTS = []
+if __name__ == '__main__':
+    NAME_INPUT_FILE = 'input.txt'
+    BROWSER = webdriver.Chrome()
+    YANDEX_MAP_LINK = 'https://yandex.ru/maps/'
 
-with open(NAME_INPUT_FILE, 'r') as f:
-    REQUESTS = [line.strip() for line in f.readlines()]
+    try:
+        with open(NAME_INPUT_FILE, 'r') as f:
+            REQUESTS = [line.strip() for line in f.readlines()]
 
-coordinate_category = {}
-coordinate_name = {}
+        try:
+            BROWSER.get(YANDEX_MAP_LINK)
+            time.sleep(1)
 
-browser = webdriver.Chrome()
+            for request in REQUESTS:
+                perform_search(BROWSER, request)
 
-try:
-    browser.get('https://yandex.ru/maps/')
-    time.sleep(TIME_SLEEP)
+                with open("result_json.json", "a") as f_json:
+                    result = {
+                        "ADDRESS": extract_address(BROWSER),
+                        "COORDINATES": extract_coordinates(BROWSER),
+                        "CATEGORY": extract_category(BROWSER),
+                        "NAME": extract_name(BROWSER)
+                    }
+                    f_json.write(json.dumps(result, indent=2, ensure_ascii=False) + "\n")
+        except Exception as e:
+            raise Exception(f"An error occurred: {str(e)}")
+        finally:
+            BROWSER.quit()
 
-    for request in REQUESTS:
-        perform_search(browser, request)
-        # coordinate_category[request] = extract_category(browser, request)
-        # coordinate_name[request] = extract_name(browser)
+    except FileNotFoundError:
+        raise FileNotFoundError(f"Input file '{NAME_INPUT_FILE}' not found.")
+    except Exception as e:
+        raise Exception(f"An error occurred while reading the input file: {str(e)}")
 
-        with open("result_json.json", "a") as f_json:
-            result = {
-                "ADDRESS": extract_address(browser),
-                "COORDINATES": extract_coordinates(browser),
-                "CATEGORY": extract_category(browser),
-                "NAME": extract_name(browser)
-            }
-            f_json.write(json.dumps(result, indent=2, ensure_ascii=False) + "\n")
-
-finally:
-    browser.quit()
