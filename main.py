@@ -15,8 +15,8 @@ OUTPUT_JSON_FILE = True
 # Задержка
 TIME_SLEEP = 1
 # Что извлекать у организации
-NAME = True
-CATEGORY = True
+# NAME = True
+# CATEGORY = True
 
 with open(NAME_INPUT_FILE, 'r') as f:
     lines = f.readlines()
@@ -37,7 +37,7 @@ for request in REQUESTS:
 
     time.sleep(TIME_SLEEP)
     button_root = browser.find_element(By.XPATH, "//div[@class='carousel__content']")
-    time.sleep(TIME_SLEEP)
+    time.sleep(0.6)
 
     button = button_root.find_element(By.XPATH, "//a[@class='tabs-select-view__label']")
 
@@ -49,24 +49,29 @@ for request in REQUESTS:
     scroll_height = browser.execute_script("return arguments[0].scrollHeight", scroll_container)
     while True:
         ActionChains(browser).scroll_from_origin(scroll_origin, 0, 5000).perform()
-        time.sleep(0.7)
+        time.sleep(0.9)
         if scroll_height == browser.execute_script("return arguments[0].scrollHeight", scroll_container):
             break
         else:
             scroll_height = browser.execute_script("return arguments[0].scrollHeight", scroll_container)
 
-    if CATEGORY:
-        companies_category = WebDriverWait(browser, 10).until(EC.presence_of_all_elements_located((By.XPATH, "//a[@class='search-business-snippet-view__category']")))
-        list_category = []
-        for category in companies_category:
+    result = {}
+    # CATEGORY
+    companies_category = WebDriverWait(browser, 10).until(EC.presence_of_all_elements_located((By.XPATH, "//a[@class='search-business-snippet-view__category']")))
+    list_category = []
+    for category in companies_category:
+        if len(list_category) > 0 and (category.text).islower():
+            list_category[-1] += f', {category.text}'
+        else:
             list_category.append(category.text)
-        coordinate_category[request] = list_category
-    if NAME:
-        companies_name = WebDriverWait(browser, 10).until(EC.presence_of_all_elements_located((By.XPATH, "//div[@class='search-business-snippet-view__title']")))
-        list_name = []
-        for name in companies_name:
-            list_name.append(name.text)
-        coordinate_name[request] = list_name
+    coordinate_category[request] = list_category
+    # NAME
+    companies_name = WebDriverWait(browser, 10).until(EC.presence_of_all_elements_located((By.XPATH, "//div[@class='search-business-snippet-view__title']")))
+    list_name = []
+    for name in companies_name:
+        list_name.append(name.text)
+    coordinate_name[request] = list_name
+
 
 browser.quit()
 
