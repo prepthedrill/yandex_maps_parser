@@ -1,8 +1,10 @@
 import json
 import time
+from tqdm import tqdm
 
 from selenium import webdriver
 from selenium.webdriver import ActionChains
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.actions.wheel_input import ScrollOrigin
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -126,8 +128,12 @@ if __name__ == '__main__':
     """
     The main entry point of the script.
     """
+    # Настройка работы без открывания браузера
+    chrome_options = Options()
+    # chrome_options.add_argument('--headless')
+
     NAME_INPUT_FILE = 'input.txt'
-    BROWSER = webdriver.Chrome()
+    BROWSER = webdriver.Chrome(options=chrome_options)
     YANDEX_MAP_LINK = 'https://yandex.ru/maps/'
 
     try:
@@ -138,7 +144,8 @@ if __name__ == '__main__':
             BROWSER.get(YANDEX_MAP_LINK)
             time.sleep(1)
 
-            for request in REQUESTS:
+            # Использование tqdm для отображения шкалы выполнения
+            for request in tqdm(REQUESTS, desc='Processing requests', unit='request'):
                 perform_search(BROWSER, request)
 
                 with open("result_json.json", "a") as f_json:
