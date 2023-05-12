@@ -11,6 +11,11 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 
 def extract_category(driver):
+    """
+    Extracts the categories of companies from the search results.
+    Args: driver (WebDriver): The WebDriver instance.
+    Returns: list: A list of categories.
+    """
     companies_category = WebDriverWait(driver, 10).until(
         EC.presence_of_all_elements_located(
             (By.XPATH, "//a[@class='search-business-snippet-view__category']")
@@ -26,6 +31,11 @@ def extract_category(driver):
 
 
 def extract_name(driver):
+    """
+    Extracts the names of companies from the search results.
+    Args:driver (WebDriver): The WebDriver instance.
+    Returns:list: A list of company names.
+    """
     companies_name = WebDriverWait(driver, 10).until(
         EC.presence_of_all_elements_located(
             (By.XPATH, "//div[@class='search-business-snippet-view__title']")
@@ -36,6 +46,11 @@ def extract_name(driver):
 
 
 def extract_address(driver):
+    """
+    Extracts the addresses of companies from the search results.
+    Args: driver (WebDriver): The WebDriver instance.
+    Returns: list: A list of company addresses.
+    """
     companies_address = WebDriverWait(driver, 10).until(
         EC.presence_of_all_elements_located(
             (By.XPATH, "//div[@class='toponym-card-title-view__description']")
@@ -46,6 +61,11 @@ def extract_address(driver):
 
 
 def extract_coordinates(driver):
+    """
+    Extracts the coordinates of companies from the search results.
+    Args: driver (WebDriver): The WebDriver instance.
+    Returns: list: A list of company coordinates.
+    """
     companies_coordinates = WebDriverWait(driver, 10).until(
         EC.presence_of_all_elements_located(
             (By.XPATH, "//div[@class='toponym-card-title-view__coords-badge']")
@@ -56,6 +76,13 @@ def extract_coordinates(driver):
 
 
 def perform_search(driver, request, TIME_SLEEP=1):
+    """
+    Performs a search for a specific request on Yandex Maps.
+    Args:
+        driver (WebDriver): The WebDriver instance.
+        request (str): The search request.
+        TIME_SLEEP (int, optional): The time to sleep between actions. Defaults to 1.
+    """
     search_box_root = WebDriverWait(driver, 10).until(
         EC.presence_of_element_located(
             (By.XPATH, "//div[@class='search-form-view__input']")
@@ -96,6 +123,9 @@ def perform_search(driver, request, TIME_SLEEP=1):
 
 
 if __name__ == '__main__':
+    """
+    The main entry point of the script.
+    """
     NAME_INPUT_FILE = 'input.txt'
     BROWSER = webdriver.Chrome()
     YANDEX_MAP_LINK = 'https://yandex.ru/maps/'
@@ -128,4 +158,3 @@ if __name__ == '__main__':
         raise FileNotFoundError(f"Input file '{NAME_INPUT_FILE}' not found.")
     except Exception as e:
         raise Exception(f"An error occurred while reading the input file: {str(e)}")
-
