@@ -1,61 +1,60 @@
-# Yandex Maps Parser
+# Yandex Maps Scraper
 
-This script allows you to extract information about companies from Yandex Maps search results. It uses the Selenium library to automate the web browser and retrieve the desired data.
+The Yandex Maps Parser is a Python script that allows you to extract company data from Yandex Maps search results. It utilizes the Selenium library to automate the process of searching for specific requests and gathering information such as company names, categories, addresses, and coordinates.
 
 ## Prerequisites
+Before running the script, make sure you have the following dependencies installed:
+- Python 3.x
+- Selenium
+- tqdm
+- ChromeDriver (for running Chrome browser)
 
-Before running the script, make sure you have the following installed:
+## Installation
+1. Clone the repository or download the script file (`main.py`) to your local machine.
 
-- Python 3.10
-- Selenium library
-- Chrome WebDriver (compatible with your Chrome browser version)
+2. Install the required dependencies by running the following command:
+   ```
+   pip install -r requirements.txt
+   ```
 
-You can install the required packages using pip:
+3. Download ChromeDriver from the official website: https://sites.google.com/a/chromium.org/chromedriver/
+   Make sure to download the version compatible with your Chrome browser.
 
-```
-pip install -r requrements.txt
-```
+4. Extract the ChromeDriver executable to a location of your choice and make note of the file path.
 
 ## Usage
+1. Prepare the input file:
+   - Create a text file (`input.txt`) containing the search requests. Each request should be on a separate line. Example:
+    ```
+    Кремль, 1, Нижний Новгород
+    улица Воровского 77 Киров
+    58.603802, 49.670888
+    ```
+   - Save the file in the same directory as the script (`main.py`).
 
-1. Place the script in a directory of your choice.
+2. Run the script:
+   - Open a terminal or command prompt.
+   - Navigate to the directory where the script is located.
+   - Run the following command to execute the script:
+     ```
+     python main.py
+     ```
 
-2. Create a text file named `input.txt` in the same directory. Each line in the file should contain a search request for Yandex Maps.
-Example:
-```
-Кремль, 1, Нижний Новгород
-улица Воровского 77 Киров
-58.603802, 49.670888
-```
+3. Monitor the progress:
+   - The script will display a progress bar indicating the processing of each request.
 
+4. View the results:
+   - After the script completes, you will find the extracted data in a JSON file named `result_json.json`.
+   - If any errors occur during the extraction process, the script will log the requests that caused the errors in a file named `error_address.txt`.
 
-3. Run the script by executing the following command:
+## Notes
+- The script interacts with the Yandex Maps website and relies on its structure. Changes to the website's layout may require modifications to the script.
+- If you encounter any issues, ensure that you have provided the correct paths and dependencies are properly installed.
 
-```
-python main.py
-```
-
-## Output
-
-The script will perform a search for each request in the `input.txt` file and extract the following information for each company:
-
-- Company name
-- Company category
-- Company address
-- Company coordinates
-
-The extracted data will be saved in a JSON file named `result_json.json`. Each line in the file will contain the JSON representation of the extracted data for one company.
-
-## Note
-
-- Make sure you have the Chrome WebDriver executable (`chromedriver`) in your system's PATH or provide the path to it in the script (`webdriver.Chrome(executable_path='path/to/chromedriver')`).
-
-- The script uses explicit waits to ensure that the elements on the page are loaded before performing any actions. You can adjust the timeout values in the `WebDriverWait` calls if needed.
-
-- The script assumes that you are using Chrome as the web browser. If you are using a different browser, make sure to modify the script accordingly.
-
-- Please be aware of the website's terms of service and usage policies. Web scraping should be done responsibly and in compliance with the website's guidelines.
-
+## Contributing
 Feel free to customize the script according to your needs or incorporate it into your own projects.
 
 For any questions or issues, please contact Telegram @prepthedrill.
+
+## License
+This project is licensed under the MIT License.

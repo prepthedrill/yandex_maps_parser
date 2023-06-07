@@ -1,8 +1,8 @@
 import json
 import time
-from tqdm import tqdm
 
 from selenium import webdriver
+from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver import ActionChains
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.actions.wheel_input import ScrollOrigin
@@ -10,6 +10,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
+from tqdm import tqdm
 
 
 def extract_category(driver):
@@ -112,7 +113,8 @@ def perform_search(driver, request, TIME_SLEEP=1):
         "return arguments[0].scrollHeight", scroll_container
     )
     while True:
-        ActionChains(driver).scroll_from_origin(scroll_origin, 0, 5000).perform()
+        ActionChains(driver).scroll_from_origin(scroll_origin, 0,
+                                                5000).perform()
         time.sleep(0.9)
         if scroll_height == driver.execute_script(
                 "return arguments[0].scrollHeight", scroll_container
@@ -137,31 +139,34 @@ if __name__ == '__main__':
     YANDEX_MAP_LINK = 'https://yandex.ru/maps/'
 
     try:
-        with open(NAME_INPUT_FILE, 'r') as f:
-            REQUESTS = [line.strip() for line in f.readlines()]
+        with open(NAME_INPUT_FILE, 'r', encoding='utf-8') as f:
+            REQUESTS = [line.strip().replace('\t', ' ') for line in
+                        f.readlines()]
 
-        try:
-            BROWSER.get(YANDEX_MAP_LINK)
-            time.sleep(1)
+        BROWSER.get(YANDEX_MAP_LINK)
+        time.sleep(1)
 
-            # Использование tqdm для отображения шкалы выполнения
-            for request in tqdm(REQUESTS, desc='Processing requests', unit='request'):
+        for request in tqdm(REQUESTS, desc='Processing requests',
+                            unit='request'):
+            try:
                 perform_search(BROWSER, request)
+            except NoSuchElementException:
+                with open('error_address.txt', 'a') as f:
+                    f.write(f'{request} \n')
+                BROWSER.get(YANDEX_MAP_LINK)
+                continue
 
-                with open("result_json.json", "a") as f_json:
-                    result = {
-                        "ADDRESS": extract_address(BROWSER),
-                        "COORDINATES": extract_coordinates(BROWSER),
-                        "CATEGORY": extract_category(BROWSER),
-                        "NAME": extract_name(BROWSER)
-                    }
-                    f_json.write(json.dumps(result, indent=2, ensure_ascii=False) + "\n")
-        except Exception as e:
-            raise Exception(f"An error occurred: {str(e)}")
-        finally:
-            BROWSER.quit()
+            with open("result_json.json", "a", encoding='utf-8') as f_json:
+                result = {
+                    "ADDRESS": extract_address(BROWSER),
+                    "COORDINATES": extract_coordinates(BROWSER),
+                    "CATEGORY": extract_category(BROWSER),
+                    "NAME": extract_name(BROWSER)
+                }
+                f_json.write(
+                    json.dumps(result, indent=2, ensure_ascii=False) + ",\n")
 
     except FileNotFoundError:
-        raise FileNotFoundError(f"Input file '{NAME_INPUT_FILE}' not found.")
+        print(f"Input file '{NAME_INPUT_FILE}' not found.")
     except Exception as e:
-        raise Exception(f"An error occurred while reading the input file: {str(e)}")
+        print(f"An error occurred while reading the input file: {str(e)}")
